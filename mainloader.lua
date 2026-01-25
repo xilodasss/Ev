@@ -22,7 +22,7 @@ local UNIVERSAL_SCRIPT = "/universal/main.lua"
 
 local function createLoadingUI()
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "BagahLoader"
+    ScreenGui.Name = "XilodasXLoaderUI"
     ScreenGui.DisplayOrder = 999
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = game:GetService("CoreGui")
@@ -203,7 +203,7 @@ local function main()
         ui.close()
 
         game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "BagahHub",
+            Title = "Xilodass",
             Text = selectedGame .. " loaded successfully!",
             Duration = 3
         })
