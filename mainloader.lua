@@ -1,4 +1,4 @@
-local GITHUB_BASE = "https://raw.githubusercontent.com/Bagah-Project/bagah-hub-public/main"
+local GITHUB_BASE = "https://raw.githubusercontent.com/xilodasss/Ev/main"
 
 
 local SUPPORTED_GAMES = {
@@ -14,11 +14,7 @@ local SUPPORTED_GAMES = {
             11353528705,     -- Pro
             99214917572799,  -- Custom Servers
         }
-    },
-    ["Evade Legacy"] = {
-        script = "/games/evadelegacy/main.lua",
-        placeIds = { 96537472072550 }
-    },
+    }
 }
 
 local UNIVERSAL_SCRIPT = "/universal/main.lua"
