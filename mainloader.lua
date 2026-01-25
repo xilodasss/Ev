@@ -401,7 +401,7 @@ end
 -- Main Function with Obsidian UI
 local function main()
     -- Choose UI style (Obsidian or Modern)
-    local useObsidian = true -- Set to false for modern UI
+    local useObsidian = false -- Set to false for modern UI
     
     local ui
     if useObsidian then
