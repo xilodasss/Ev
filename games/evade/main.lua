@@ -4397,8 +4397,165 @@ end
     }
 end)()
 
+-- ==================== GUN FUNCTIONS MODULE ====================
+local GunFunctionsModule = (function()
+    local enhancedWeapons = {}
+    
+    local function enhanceGrappleHook()
+        local success, result = pcall(function()
+            local GrappleHook = require(game:GetService("ReplicatedStorage").Tools["GrappleHook"])
+            local grappleTask = GrappleHook.Tasks[2]
+            local shootMethod = grappleTask.Functions[1].Activations[1].Methods[1]
+
+            -- SETTING KAMU:
+            shootMethod.Info.Speed = 8000          -- Range 800 studs
+            shootMethod.Info.Lifetime = 6.0        -- 6 detik (cukup lama)
+            shootMethod.Info.Gravity = Vector3.new(0, -5, 0)  -- Sedikit gravitasi
+            shootMethod.Info.SpreadIncrease = 0.05 -- Hampir akurat
+            shootMethod.Info.Cooldown = 0.8        -- Delay 1 detik (perfect!)
+
+            -- Akurasi bagus:
+            grappleTask.MethodReferences.Projectile.Info.SpreadInfo.MaxSpread = 0.2
+            grappleTask.MethodReferences.Projectile.Info.SpreadInfo.MinSpread = 0.05
+            grappleTask.MethodReferences.Projectile.Info.SpreadInfo.ReductionRate = 60
+
+            -- Check method:
+            local checkMethod = grappleTask.AutomaticFunctions[1].Methods[1]
+            checkMethod.Info.Cooldown = 0.8
+            checkMethod.CooldownInfo.TestCooldown = 0.5  -- Sistem cek 0.5 detik
+
+            -- Isi 300 ammo (banyak banget!):
+            grappleTask.ResourceInfo.Cap = 300
+            grappleTask.ResourceInfo.Reserve = 300
+
+            enhancedWeapons["GrappleHook"] = true
+            return true
+        end)
+        
+        return success, result
+    end
+
+    local function enhanceBreacher()
+        local success, result = pcall(function()
+            local Breacher = require(game:GetService("ReplicatedStorage").Tools.Breacher)
+            
+            -- Cari task portal
+            local portalTask
+            for i, task in ipairs(Breacher.Tasks) do
+                if task.ResourceInfo and task.ResourceInfo.Type == "Clip" then
+                    portalTask = task
+                    break
+                end
+            end
+            if not portalTask then portalTask = Breacher.Tasks[2] end
+
+            -- ===== SETTING SUPER CEPAT =====
+            -- 1. Isi 300 charge:
+            portalTask.ResourceInfo.Cap = 300
+            portalTask.ResourceInfo.Reserve = 300
+
+            -- 2. Jarak 99999:
+            local blueShoot = portalTask.Functions[1].Activations[1].Methods[1]
+            local yellowShoot = portalTask.Functions[2].Activations[1].Methods[1]
+            
+            blueShoot.Info.Range = 999999  -- Max range!
+            yellowShoot.Info.Range = 999999
+            
+            -- 3. Akurasi perfect (tidak ada spread):
+            blueShoot.Info.SpreadIncrease = 0
+            yellowShoot.Info.SpreadIncrease = 0
+            
+            portalTask.MethodReferences.Portal.Info.SpreadInfo.MaxSpread = 0
+            portalTask.MethodReferences.Portal.Info.SpreadInfo.MinSpread = 0
+            portalTask.MethodReferences.Portal.Info.SpreadInfo.ReductionRate = 100
+
+            -- 4. DELAY 0.3 DETIK (SUPER CEPAT!):
+            blueShoot.Info.Cooldown = 0.4  -- ← INI DELAY 0.3 DETIK!
+            yellowShoot.Info.Cooldown = 0.4  -- ← INI DELAY 0.3 DETIK!
+
+            -- 5. Test cooldown super cepat:
+            if blueShoot.CooldownInfo then
+                blueShoot.CooldownInfo.TestCooldown = 0.15  -- Sistem cek 0.15 detik!
+            end
+            if yellowShoot.CooldownInfo then
+                yellowShoot.CooldownInfo.TestCooldown = 0.15
+            end
+
+            -- 6. Kecepatan proyektil super cepat:
+            if not blueShoot.Info.Speed then
+                blueShoot.Info.Speed = 500  -- Super cepat!
+                yellowShoot.Info.Speed = 500
+            end
+
+            -- 7. Priority maksimal:
+            blueShoot.GlobalPriority = 500
+            yellowShoot.GlobalPriority = 500
+            blueShoot.Priority = 1
+            yellowShoot.Priority = 1
+
+            -- 8. Hilangkan semua batasan:
+            blueShoot.CooldownInfo = {}
+            yellowShoot.CooldownInfo = {}
+            blueShoot.Requirements = {}
+            yellowShoot.Requirements = {}
+
+            -- 9. Bisa hold untuk auto-tembak:
+            portalTask.Functions[1].Activations[1].CanHoldDown = true
+            portalTask.Functions[2].Activations[1].CanHoldDown = true
+
+            -- 10. No resource check:
+            blueShoot.ResourceAboveZero = false
+            yellowShoot.ResourceAboveZero = false
+
+            enhancedWeapons["Breacher"] = true
+            return true
+        end)
+        
+        return success, result
+    end
+
+    return {
+        EnhanceGrappleHook = SafeWrapper("GunFunctions.EnhanceGrappleHook", function()
+            local success, result = enhanceGrappleHook()
+            if success then
+                Library:Notify({
+                    Title = "GrappleHook",
+                    Description = "GrappleHook successfully upgraded!",
+                    Duration = 5
+                })
+            else
+                Library:Notify({
+                    Title = "GrappleHook Error",
+                    Description = "Error: " .. tostring(result),
+                    Duration = 5
+                })
+            end
+        end),
+
+        EnhanceBreacher = SafeWrapper("GunFunctions.EnhanceBreacher", function()
+            local success, result = enhanceBreacher()
+            if success then
+                Library:Notify({
+                    Title = "Breacher (Portal Gun)",
+                    Description = "Portal Gun Successfully upgraded! \n✓ Infinite charges \n✓ Maximum range \n✓ Instant reload",
+                    Duration = 6
+                })
+            else
+                Library:Notify({
+                    Title = "Breacher Error",
+                    Description = "Error: " .. tostring(result),
+                    Duration = 5
+                })
+            end
+        end),
+
+        IsEnhanced = function(weaponName)
+            return enhancedWeapons[weaponName] == true
+        end
+    }
+end)()
+
 -- ==================== GUN FUNCTIONS TAB ====================
--- Tambahkan di bagian setelah TracerGroup atau sebelum VisualGroup di tab Visuals
 local GunFunctionsGroup = Tabs.Visuals:AddLeftGroupbox("Gun Functions", "zap")
 
 GunFunctionsGroup:AddDivider()
@@ -4420,41 +4577,7 @@ GunFunctionsGroup:AddButton({
     DoubleClick = false,
 })
 
-GunFunctionsGroup:AddButton({
-    Text = "Enhance Smoke Grenade",
-    Func = SafeWrapper("EnhanceSmokeGrenade", function()
-        GunFunctionsModule.EnhanceSmokeGrenade()
-    end),
-    DoubleClick = false,
-})
-
-GunFunctionsGroup:AddButton({
-    Text = "Enhance Boombox",
-    Func = SafeWrapper("EnhanceBoombox", function()
-        GunFunctionsModule.EnhanceBoombox()
-    end),
-    DoubleClick = false,
-})
-
-GunFunctionsGroup:AddDivider()
-
-GunFunctionsGroup:AddButton({
-    Text = "ENHANCE ALL WEAPONS",
-    Func = SafeWrapper("EnhanceAllWeapons", function()
-        GunFunctionsModule.EnhanceAll()
-    end),
-    DoubleClick = true,
-})
-
-GunFunctionsGroup:AddButton({
-    Text = "Reset All Enhancements",
-    Func = SafeWrapper("ResetEnhancements", function()
-        GunFunctionsModule.ResetAll()
-    end),
-    DoubleClick = true,
-})
-
--- Tambahkan juga status display
+-- Status display
 local statusLabel = GunFunctionsGroup:AddLabel("Status: No weapons enhanced")
 
 -- Update function untuk status
@@ -4465,12 +4588,6 @@ local function updateGunStatus()
     end
     if GunFunctionsModule.IsEnhanced("Breacher") then
         table.insert(status, "Portal Gun ✓")
-    end
-    if GunFunctionsModule.IsEnhanced("SmokeGrenade") then
-        table.insert(status, "Smoke Grenade ✓")
-    end
-    if GunFunctionsModule.IsEnhanced("Boombox") then
-        table.insert(status, "Boombox ✓")
     end
     
     if #status > 0 then
@@ -4487,44 +4604,6 @@ task.spawn(function()
         task.wait(2)
     end
 end)
-
--- ==================== GUN FUNCTIONS TAB ====================
-local GunFunctionsGroup = Tabs.Visuals:AddLeftGroupbox("Gun Functions", "zap")
-
-GunFunctionsGroup:AddDivider()
-GunFunctionsGroup:AddLabel("ENHANCE YOUR WEAPONS")
-
-GunFunctionsGroup:AddButton({
-    Text = "Enhance GrappleHook",
-    Func = function()
-        GunFunctionsModule.EnhanceGrappleHook()
-    end,
-    DoubleClick = false,
-})
-
-GunFunctionsGroup:AddButton({
-    Text = "Enhance Breacher (Portal Gun)",
-    Func = function()
-        GunFunctionsModule.EnhanceBreacher()
-    end,
-    DoubleClick = false,
-})
-
-GunFunctionsGroup:AddButton({
-    Text = "Enhance Smoke Grenade",
-    Func = function()
-        GunFunctionsModule.EnhanceSmokeGrenade()
-    end,
-    DoubleClick = false,
-})
-
-GunFunctionsGroup:AddButton({
-    Text = "ENHANCE ALL WEAPONS",
-    Func = function()
-        GunFunctionsModule.EnhanceAll()
-    end,
-    DoubleClick = true,
-})
 
 local VisualGroup = Tabs.Visuals:AddRightGroupbox("Visual Enhancements", "sun")
 local originalLighting = {
