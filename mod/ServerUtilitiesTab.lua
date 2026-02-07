@@ -1,84 +1,31 @@
--- ServerUtilitiesTab.lua
--- External file for Server Utilities Tab functionality
+-- ServerUtilitiesTab.lua - External Server Utilities Tab for Draconic Hub
+-- Modified to work with your existing script structure
 
 -- Services
 local TeleportService = game:GetService("TeleportService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Variables
 local player = Players.LocalPlayer
 local placeId = game.PlaceId
 local jobId = game.JobId
 
--- Helper functions (assuming these are defined in main script)
-local function Info(title, content, duration)
-    -- Implementation from main script
-end
-
-local function Error(title, content, duration)
-    -- Implementation from main script
-end
-
--- Helper Function Server
-local function getServerLink()
-    return string.format("https://www.roblox.com/games/start?placeId=%d&jobId=%s", placeId, jobId)
-end
-
-local function joinServerByPlaceId(targetPlaceId, modeName)
-    local success, servers = pcall(function()
-        return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" ..
-            targetPlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
-    end)
-
-    if success and servers and servers.data and #servers.data > 0 then
-        local availableServers = {}
-        for _, server in ipairs(servers.data) do
-            if server.playing < server.maxPlayers then
-                table.insert(availableServers, server)
-            end
-        end
-
-        if #availableServers > 0 then
-            table.sort(availableServers, function(a, b) return a.playing > b.playing end)
-            local targetServer = availableServers[1]
-
-            if Fluent then
-                Fluent:Notify({
-                    Title = "Joining " .. modeName,
-                    Content = "Teleporting to server with " ..
-                        targetServer.playing .. "/" .. targetServer.maxPlayers .. " players",
-                    Duration = 3
-                })
-            end
-
-            TeleportService:TeleportToPlaceInstance(targetPlaceId, targetServer.id, player)
-        else
-            if Fluent then
-                Fluent:Notify({
-                    Title = "Join Failed",
-                    Content = "No available " .. modeName .. " servers found!",
-                    Duration = 3
-                })
-            end
-        end
-    else
-        if Fluent then
-            Fluent:Notify({
-                Title = "Join Failed",
-                Content = "Could not fetch " .. modeName .. " servers!",
-                Duration = 3
-            })
-        end
-    end
+-- Helper functions
+local function createNotification(title, content, duration)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = title,
+        Text = content,
+        Duration = duration or 5
+    })
 end
 
 -- Main function to create Server Utilities Tab
 local function CreateServerUtilitiesTab(Window, Fluent)
     local ServerTab = Window:AddTab({ Title = "Server Utilities", Icon = "server" })
     
+    -- Server Info Section
     ServerTab:AddSection("Server Info")
     
     local gameModeName = "Loading..."
@@ -109,28 +56,23 @@ local function CreateServerUtilitiesTab(Window, Fluent)
         Title = "Copy Server Link",
         Description = "Copy the current server's join link",
         Callback = function()
-            local serverLink = getServerLink()
+            local serverLink = string.format("https://www.roblox.com/games/start?placeId=%d&jobId=%s", placeId, jobId)
             local success, errorMsg = pcall(function()
                 setclipboard(serverLink)
             end)
 
             if success then
-                if Fluent then
-                    Fluent:Notify({
-                        Title = "Link Copied",
-                        Content = "Server invite link copied to clipboard!",
-                        Duration = 3
-                    })
-                end
+                Fluent:Notify({
+                    Title = "Link Copied",
+                    Content = "Server invite link copied to clipboard!",
+                    Duration = 3
+                })
             else
-                if Fluent then
-                    Fluent:Notify({
-                        Title = "Copy Failed",
-                        Content = "Your executor doesn't support setclipboard",
-                        Duration = 3
-                    })
-                end
-                warn("Failed to copy link:", errorMsg)
+                Fluent:Notify({
+                    Title = "Copy Failed",
+                    Content = "Your executor doesn't support setclipboard",
+                    Duration = 3
+                })
                 warn("Server Link:", serverLink)
             end
         end
@@ -154,6 +96,7 @@ local function CreateServerUtilitiesTab(Window, Fluent)
         Content = tostring(placeId)
     })
     
+    -- Quick Actions Section
     ServerTab:AddSection("Quick Actions")
     
     ServerTab:AddButton({
@@ -184,23 +127,24 @@ local function CreateServerUtilitiesTab(Window, Fluent)
                 if #filteredServers > 0 then
                     local randomServer = filteredServers[math.random(1, #filteredServers)]
                     TeleportService:TeleportToPlaceInstance(placeId, randomServer.id, player)
+                    Fluent:Notify({
+                        Title = "Server Hop",
+                        Content = "Joining server with " .. randomServer.playing .. " players",
+                        Duration = 3
+                    })
                 else
-                    if Fluent then
-                        Fluent:Notify({
-                            Title = "Server Hop Failed",
-                            Content = "No servers with 5+ players found!",
-                            Duration = 3
-                        })
-                    end
-                end
-            else
-                if Fluent then
                     Fluent:Notify({
                         Title = "Server Hop Failed",
-                        Content = "Could not fetch servers!",
+                        Content = "No servers with 5+ players found!",
                         Duration = 3
                     })
                 end
+            else
+                Fluent:Notify({
+                    Title = "Server Hop Failed",
+                    Content = "Could not fetch servers!",
+                    Duration = 3
+                })
             end
         end
     })
@@ -218,65 +162,109 @@ local function CreateServerUtilitiesTab(Window, Fluent)
                 table.sort(servers.data, function(a, b) return a.playing < b.playing end)
                 if servers.data[1] then
                     TeleportService:TeleportToPlaceInstance(placeId, servers.data[1].id, player)
-                end
-            else
-                if Fluent then
                     Fluent:Notify({
-                        Title = "Server Hop Failed",
-                        Content = "Could not fetch servers!",
+                        Title = "Joining Small Server",
+                        Content = "Joining server with " .. servers.data[1].playing .. " players",
                         Duration = 3
                     })
                 end
+            else
+                Fluent:Notify({
+                    Title = "Server Hop Failed",
+                    Content = "Could not fetch servers!",
+                    Duration = 3
+                })
             end
         end
     })
     
+    -- Join Game Modes Section
     ServerTab:AddSection("Join Game Modes")
     
     local gameModes = {
-        {Title = "Join Big Team", PlaceId = 10324346056, Description = "Join the most populated Big Team server"},
-        {Title = "Join Casual", PlaceId = 10662542523, Description = "Join the most populated Casual server"},
-        {Title = "Join Social Space", PlaceId = 10324347967, Description = "Join the most populated Social Space server"},
-        {Title = "Join Player Nextbots", PlaceId = 121271605799901, Description = "Join the most populated Player Nextbots server"},
-        {Title = "Join VC Only", PlaceId = 10808838353, Description = "Join the most populated VC Only server"},
-        {Title = "Join Pro", PlaceId = 11353528705, Description = "Join the most populated Pro server"}
+        {Title = "Join Big Team", PlaceId = 10324346056, ModeName = "Big Team"},
+        {Title = "Join Casual", PlaceId = 10662542523, ModeName = "Casual"},
+        {Title = "Join Social Space", PlaceId = 10324347967, ModeName = "Social Space"},
+        {Title = "Join Player Nextbots", PlaceId = 121271605799901, ModeName = "Player Nextbots"},
+        {Title = "Join VC Only", PlaceId = 10808838353, ModeName = "VC Only"},
+        {Title = "Join Pro", PlaceId = 11353528705, ModeName = "Pro"}
     }
     
     for _, mode in ipairs(gameModes) do
         ServerTab:AddButton({
             Title = mode.Title,
-            Description = mode.Description,
+            Description = "Join the most populated " .. mode.ModeName .. " server",
             Callback = function()
-                joinServerByPlaceId(mode.PlaceId, mode.Title:match("Join (.+)"))
+                local success, servers = pcall(function()
+                    return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" ..
+                        mode.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+                end)
+
+                if success and servers and servers.data and #servers.data > 0 then
+                    local availableServers = {}
+                    for _, server in ipairs(servers.data) do
+                        if server.playing < server.maxPlayers then
+                            table.insert(availableServers, server)
+                        end
+                    end
+
+                    if #availableServers > 0 then
+                        table.sort(availableServers, function(a, b) return a.playing > b.playing end)
+                        local targetServer = availableServers[1]
+
+                        Fluent:Notify({
+                            Title = "Joining " .. mode.ModeName,
+                            Content = "Teleporting to server with " ..
+                                targetServer.playing .. "/" .. targetServer.maxPlayers .. " players",
+                            Duration = 3
+                        })
+
+                        TeleportService:TeleportToPlaceInstance(mode.PlaceId, targetServer.id, player)
+                    else
+                        Fluent:Notify({
+                            Title = "Join Failed",
+                            Content = "No available " .. mode.ModeName .. " servers found!",
+                            Duration = 3
+                        })
+                    end
+                else
+                    Fluent:Notify({
+                        Title = "Join Failed",
+                        Content = "Could not fetch " .. mode.ModeName .. " servers!",
+                        Duration = 3
+                    })
+                end
             end
         })
     end
     
+    -- Custom Server Section
     ServerTab:AddSection("Custom Server")
     
     local customServerCode = ""
     
-    ServerTab:AddInput("CustomServerCodeInput", {
+    local codeInput = ServerTab:AddInput("CustomServerCodeInput", {
         Title = "Custom Server Code",
         Default = "",
         Placeholder = "Enter custom server passcode",
-        Callback = function(value)
-            customServerCode = value
-        end
+        Numeric = false,
+        Finished = false
     })
+    
+    codeInput:OnChanged(function(value)
+        customServerCode = value
+    end)
     
     ServerTab:AddButton({
         Title = "Join Custom Server",
         Description = "Join custom server with the code above",
         Callback = function()
             if customServerCode == "" then
-                if Fluent then
-                    Fluent:Notify({
-                        Title = "Join Failed",
-                        Content = "Please enter a custom server code!",
-                        Duration = 3
-                    })
-                end
+                Fluent:Notify({
+                    Title = "Join Failed",
+                    Content = "Please enter a custom server code!",
+                    Duration = 3
+                })
                 return
             end
 
@@ -286,21 +274,17 @@ local function CreateServerUtilitiesTab(Window, Fluent)
             end)
 
             if success then
-                if Fluent then
-                    Fluent:Notify({
-                        Title = "Joining Custom Server",
-                        Content = "Attempting to join with code: " .. customServerCode,
-                        Duration = 3
-                    })
-                end
+                Fluent:Notify({
+                    Title = "Joining Custom Server",
+                    Content = "Attempting to join with code: " .. customServerCode,
+                    Duration = 3
+                })
             else
-                if Fluent then
-                    Fluent:Notify({
-                        Title = "Join Failed",
-                        Content = "Invalid code or server unavailable!",
-                        Duration = 3
-                    })
-                end
+                Fluent:Notify({
+                    Title = "Join Failed",
+                    Content = "Invalid code or server unavailable!",
+                    Duration = 3
+                })
             end
         end
     })
