@@ -4079,7 +4079,7 @@ GrappleHookToggle = MiscTab:AddButton({
             shootMethod.Info.Lifetime = 10.0        -- 10 секунд полёта!
             shootMethod.Info.Gravity = Vector3.new(0, 0, 0)  -- Нет гравитации
             shootMethod.Info.SpreadIncrease = 0     -- Нет разброса
-            shootMethod.Info.Cooldown = 0.1         -- Мгновенная перезарядка
+            shootMethod.Info.Cooldown = 0.5         -- Мгновенная перезарядка
 
             -- Идеальная точность
             grappleTask.MethodReferences.Projectile.Info.SpreadInfo.MaxSpread = 0
@@ -4088,8 +4088,8 @@ GrappleHookToggle = MiscTab:AddButton({
 
             -- Мгновенная проверка
             local checkMethod = grappleTask.AutomaticFunctions[1].Methods[1]
-            checkMethod.Info.Cooldown = 0.1
-            checkMethod.CooldownInfo.TestCooldown = 0.1
+            checkMethod.Info.Cooldown = 0.5
+            checkMethod.CooldownInfo.TestCooldown = 0.5
 
             -- Бесконечные заряды
             grappleTask.ResourceInfo.Cap = 999999
@@ -4161,8 +4161,8 @@ BreacherToggle = MiscTab:AddButton({
             portalTask.MethodReferences.Portal.Info.SpreadInfo.ReductionRate = 100
 
             -- ===== 4. МГНОВЕННАЯ ПЕРЕЗАРЯДКА =====
-            blueShoot.Info.Cooldown = 0.1
-            yellowShoot.Info.Cooldown = 0.1
+            blueShoot.Info.Cooldown = 0.3
+            yellowShoot.Info.Cooldown = 0.3
 
             -- ===== 5. УБИРАЕМ ВСЕ ОГРАНИЧЕНИЯ =====
             blueShoot.CooldownInfo = {}
